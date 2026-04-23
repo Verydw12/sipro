@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPRO — Smart Inventory & Profit Engine</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal-950:#011a16;--teal-900:#042e26;--teal-800:#075240;--teal-700:#0d7a5f;--teal-600:#11a880;
+  --teal-500:#16c996;--teal-400:#3ddba8;--teal-200:#93e8d1;--teal-100:#c5f2e5;--teal-50:#eafaf5;
+  --amber-800:#6b3a00;--amber-700:#9a5500;--amber-600:#c96f00;--amber-400:#f59e0b;--amber-100:#fde68a;--amber-50:#fffbeb;
+  --red-700:#991b1b;--red-500:#ef4444;--red-400:#f87171;--red-100:#fee2e2;--red-50:#fef2f2;
+  --blue-700:#1d4ed8;--blue-400:#60a5fa;--blue-100:#dbeafe;--blue-50:#eff6ff;
+  --violet-600:#7c3aed;--violet-100:#ede9fe;--violet-50:#f5f3ff;
+  --gray-950:#0c0c0b;--gray-900:#18181a;--gray-800:#27272a;--gray-700:#3f3f46;
+  --gray-600:#52525b;--gray-500:#71717a;--gray-400:#a1a1aa;--gray-300:#d4d4d8;--gray-200:#e4e4e7;--gray-100:#f4f4f5;--gray-50:#fafafa;
+  --white:#ffffff;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--rl:12px;--rxl:16px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 16px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 40px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--gray-100);color:var(--gray-900);font-size:14px;line-height:1.5;}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--teal-950);color:white;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;border-right:1px solid rgba(255,255,255,.04);}
+.sidebar-brand{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.07);}
+.brand-logo{display:flex;align-items:center;gap:10px;}
+.brand-icon{width:34px;height:34px;background:var(--teal-600);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:-.03em;}
+.brand-sub{font-size:10px;color:var(--teal-400);margin-top:1px;letter-spacing:.09em;text-transform:uppercase;}
+.sidebar-section{padding:14px 14px 4px;font-size:10px;color:var(--teal-400);letter-spacing:.12em;text-transform:uppercase;font-weight:500;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);margin:1px 8px;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s;}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);}
+.nav-item.active{background:var(--teal-800);color:white;}
+.nav-icon{width:16px;height:16px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--red-500);color:white;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;}
+.sidebar-footer{margin-top:auto;padding:14px 14px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(255,255,255,.3);}
+
+/* MAIN */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:600;color:var(--gray-900);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.store-select{background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--r);padding:6px 10px;font-family:var(--font);font-size:13px;color:var(--gray-800);cursor:pointer;}
+.user-pill{background:var(--teal-50);color:var(--teal-700);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;}
+.content{padding:20px 24px;flex:1;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;animation:fadeUp .2s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* METRIC GRID */
+.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+.metric-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--rl);padding:16px;box-shadow:var(--shadow-sm);}
+.mc-label{font-size:11px;color:var(--gray-500);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+.mc-value{font-size:22px;font-weight:700;letter-spacing:-.03em;}
+.mc-delta{font-size:11px;margin-top:3px;color:var(--gray-500);}
+.mc-bar{height:3px;border-radius:2px;margin-top:10px;background:var(--gray-200);}
+.mc-bar-fill{height:3px;border-radius:2px;transition:width .6s ease;}
+.delta-up{color:var(--teal-700);}
+.delta-down{color:var(--red-500);}
+
+/* PANELS */
+.panel-row{display:grid;gap:16px;margin-bottom:20px;}
+.panel-row.two{grid-template-columns:1fr 1fr;}
+.panel-row.three{grid-template-columns:2fr 1fr 1fr;}
+.panel-row.r3{grid-template-columns:1fr 1fr 1fr;}
+.panel{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--rl);padding:18px;box-shadow:var(--shadow-sm);}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.panel-title{font-size:13px;font-weight:600;}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{font-size:11px;color:var(--gray-500);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--gray-200);text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;}
+tbody td{padding:10px 10px;border-bottom:1px solid var(--gray-100);font-size:13px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--gray-50);}
+.mono{font-family:var(--mono);font-size:12px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;gap:4px;}
+.badge-green{background:var(--teal-50);color:var(--teal-700);}
+.badge-amber{background:var(--amber-50);color:var(--amber-700);}
+.badge-red{background:var(--red-50);color:var(--red-700);}
+.badge-blue{background:var(--blue-50);color:var(--blue-700);}
+.badge-violet{background:var(--violet-50);color:var(--violet-600);}
+.badge-gray{background:var(--gray-100);color:var(--gray-600);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--gray-200);background:var(--white);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .15s;font-weight:500;}
+.btn:hover{background:var(--gray-50);}
+.btn-primary{background:var(--teal-700);color:white;border-color:var(--teal-700);}
+.btn-primary:hover{background:var(--teal-800);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-danger{border-color:var(--red-400);color:var(--red-500);}
+.btn-danger:hover{background:var(--red-50);}
+
+/* FORMS */
+.form-grid{display:grid;gap:14px;}
+.form-grid.two{grid-template-columns:1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:12px;font-weight:600;color:var(--gray-700);}
+.form-input,.form-select,.form-textarea{border:1px solid var(--gray-200);border-radius:var(--r);padding:8px 10px;font-family:var(--font);font-size:13px;color:var(--gray-900);transition:border .15s;background:var(--white);}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--teal-600);box-shadow:0 0 0 3px rgba(17,168,128,.1);}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-hint{font-size:11px;color:var(--gray-500);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:var(--rxl);width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.modal-header{padding:18px 20px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-size:14px;font-weight:700;}
+.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray-400);line-height:1;transition:color .15s;}
+.modal-close:hover{color:var(--gray-700);}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--gray-100);display:flex;justify-content:flex-end;gap:8px;}
+
+/* ALERT */
+.alert{padding:10px 14px;border-radius:var(--r);font-size:12px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;}
+.alert-amber{background:var(--amber-50);color:var(--amber-700);border:1px solid var(--amber-100);}
+.alert-red{background:var(--red-50);color:var(--red-700);border:1px solid var(--red-100);}
+.alert-green{background:var(--teal-50);color:var(--teal-700);border:1px solid var(--teal-100);}
+.alert-blue{background:var(--blue-50);color:var(--blue-700);border:1px solid var(--blue-100);}
+
+/* PROGRESS */
+.prog-row{margin-bottom:12px;}
+.prog-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.prog-name{color:var(--gray-800);font-weight:500;}
+.prog-pct{color:var(--gray-500);}
+.prog-track{height:7px;background:var(--gray-100);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;transition:width .7s ease;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gray-200);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
+.stat-cell{background:var(--white);padding:12px 14px;text-align:center;}
+.stat-val{font-size:18px;font-weight:700;}
+.stat-lbl{font-size:11px;color:var(--gray-500);margin-top:2px;}
+
+/* SECTION HEADER */
+.section-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.section-title{font-size:15px;font-weight:700;}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%;}
+
+/* PRODUK CARD */
+.produk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:16px;}
+.produk-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--rl);padding:14px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .18s;}
+.produk-card:hover{border-color:var(--teal-400);box-shadow:0 4px 20px rgba(13,122,95,.1);}
+.pc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.pc-name{font-size:13px;font-weight:600;}
+.pc-sku{font-size:10px;color:var(--gray-500);font-family:var(--mono);}
+.pc-prices{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;}
+.pc-price{background:var(--gray-50);border-radius:6px;padding:6px 8px;}
+.pc-price-lbl{font-size:10px;color:var(--gray-500);margin-bottom:2px;}
+.pc-price-val{font-size:13px;font-weight:600;font-family:var(--mono);}
+.pc-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+
+/* INSIGHT CARD */
+.insight-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--rl);padding:14px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;}
+.insight-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.insight-body{flex:1;}
+.insight-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+.insight-desc{font-size:12px;color:var(--gray-600);line-height:1.5;}
+.insight-action{font-size:11px;font-weight:600;margin-top:6px;}
+
+/* STOCK METER */
+.stock-meter{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;margin:4px 0;}
+.stock-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+
+/* TABS */
+.tab-bar{display:flex;gap:2px;background:var(--gray-100);padding:3px;border-radius:var(--r);margin-bottom:16px;width:fit-content;}
+.tab{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-500);}
+.tab.active{background:var(--white);color:var(--gray-900);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+
+/* SCORE RING */
+.score-ring{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.score-val{font-size:20px;font-weight:800;font-family:var(--mono);}
+.score-lbl{font-size:10px;color:var(--gray-500);font-weight:500;}
+
+/* PRICING CHIP */
+.price-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;}
+.chip-up{background:var(--teal-50);color:var(--teal-700);}
+.chip-down{background:var(--red-50);color:var(--red-700);}
+.chip-flat{background:var(--gray-100);color:var(--gray-600);}
+
+/* RESTOCK ROW */
+.restock-row{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.rr-icon{font-size:20px;}
+.rr-info{flex:1;}
+.rr-name{font-size:13px;font-weight:600;}
+.rr-detail{font-size:11px;color:var(--gray-500);margin-top:1px;}
+.rr-action{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.rr-qty{font-size:16px;font-weight:700;color:var(--teal-700);}
+.rr-days{font-size:11px;color:var(--gray-500);}
+
+/* DEAD STOCK */
+.ds-item{background:var(--white);border:1px solid var(--red-100);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.ds-skull{font-size:20px;}
+.ds-info{flex:1;}
+.ds-name{font-size:13px;font-weight:600;}
+.ds-detail{font-size:11px;color:var(--gray-500);margin-top:2px;}
+.ds-score{font-size:18px;font-weight:800;color:var(--red-500);font-family:var(--mono);}
+
+/* AUDIT */
+.audit-entry{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100);}
+.audit-entry:last-child{border-bottom:none;}
+.audit-time{font-size:11px;color:var(--gray-400);font-family:var(--mono);width:130px;flex-shrink:0;}
+.audit-body{flex:1;}
+.audit-action{font-size:12px;font-weight:600;color:var(--gray-700);}
+.audit-detail{font-size:12px;color:var(--gray-500);margin-top:1px;}
+
+@media print{.sidebar,.topbar,.btn{display:none!important;}.main{margin:0;}.content{padding:10px;}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">
+      <div class="brand-icon">📦</div>
+      <div>
+        <div class="brand-name">SIPRO</div>
+        <div class="brand-sub">Smart Inventory</div>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-y:auto;flex:1;">
+    <div class="sidebar-section">Utama</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+      Dashboard
+    </div>
+    <div class="sidebar-section">Produk & Stok</div>
+    <div class="nav-item" onclick="showPage('produk')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h8v2H2v-2z" opacity=".7"/></svg>
+      Data Produk
+    </div>
+    <div class="nav-item" onclick="showPage('transaksi')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l4 4H9v4H7V6H4l4-4zM4 12h8v2H4v-2z" opacity=".7"/></svg>
+      Catat Penjualan
+    </div>
+    <div class="sidebar-section">Engine AI</div>
+    <div class="nav-item" onclick="showPage('profit')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 12L5 7l3 3 3-4 3 2V14H1v-2z" opacity=".7"/></svg>
+      Profit Engine
+    </div>
+    <div class="nav-item" onclick="showPage('prediksi')" id="nav-prediksi">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="6" opacity=".3"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      Prediksi Stok
+      <span class="nav-badge" id="nb-prediksi">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('restock')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M14 8H9V3l-2 5H2v1l5 2v5l2-5h5V8z" opacity=".7"/></svg>
+      Auto Restock
+    </div>
+    <div class="nav-item" onclick="showPage('harga')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M12 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1zM8 11a3 3 0 110-6 3 3 0 010 6z" opacity=".7"/></svg>
+      Dynamic Pricing
+    </div>
+    <div class="nav-item" onclick="showPage('deadstock')" id="nav-dead">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 5h2v5H7V5zm0 6h2v2H7v-2z" opacity=".7"/></svg>
+      Dead Stock
+      <span class="nav-badge" id="nb-dead">0</span>
+    </div>
+    <div class="sidebar-section">Sistem</div>
+    <div class="nav-item" onclick="showPage('log')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm7 0v3h3" opacity=".7"/></svg>
+      Riwayat Aktivitas
+    </div>
+  </div>
+  <div class="sidebar-footer">v1.0 · SIPRO Engine<br>Toko: <span id="toko-nama">Toko Sejahtera</span></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <select class="store-select" id="toko-filter" onchange="setToko()">
+        <option value="Toko Sejahtera">Toko Sejahtera</option>
+        <option value="Cabang Utara">Cabang Utara</option>
+        <option value="Cabang Selatan">Cabang Selatan</option>
+      </select>
+      <div class="user-pill">Pemilik</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ======== DASHBOARD ======== -->
+    <div class="page active" id="page-dashboard">
+      <div id="alert-dash"></div>
+      <div class="metric-grid" id="dash-metrics"></div>
+      <div class="panel-row two">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Penjualan & Profit Bulanan</span>
+            <span style="font-size:11px;color:var(--gray-500)">30 hari terakhir</span>
+          </div>
+          <div class="chart-wrap" style="height:210px;"><canvas id="chartBulanan"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Distribusi Kategori</span></div>
+          <div class="chart-wrap" style="height:210px;"><canvas id="chartKategori"></canvas></div>
+        </div>
+      </div>
+      <div class="panel-row two">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Top Produk by Profit Score</span>
+            <button class="btn btn-sm" onclick="showPage('profit')">Lihat Semua →</button>
+          </div>
+          <div id="top-profit-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Alert & Rekomendasi</span>
+          </div>
+          <div id="dash-alerts-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== DATA PRODUK ======== -->
+    <div class="page" id="page-produk">
+      <div class="section-hd">
+        <span class="section-title">Data Produk</span>
+        <button class="btn btn-primary" onclick="openModal('modal-produk')">+ Tambah Produk</button>
+      </div>
+      <div class="stats-row" id="produk-stats"></div>
+      <div class="produk-grid" id="produk-grid"></div>
+    </div>
+
+    <!-- ======== CATAT PENJUALAN ======== -->
+    <div class="page" id="page-transaksi">
+      <div class="section-hd">
+        <span class="section-title">Catat Penjualan</span>
+        <button class="btn btn-primary" onclick="openModal('modal-jual')">+ Catat Penjualan</button>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Riwayat Penjualan</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Tanggal</th><th>Produk</th><th>Qty</th><th>Harga Jual</th><th>HPP</th><th>Profit</th><th>Margin</th></tr></thead>
+          <tbody id="tx-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ======== PROFIT ENGINE ======== -->
+    <div class="page" id="page-profit">
+      <div class="section-hd">
+        <span class="section-title">Smart Profit Engine</span>
+        <span style="font-size:12px;color:var(--gray-500)">Skor = (Harga Jual − HPP) × Velocity</span>
+      </div>
+      <div id="profit-alerts"></div>
+      <div class="panel-row two">
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">🏆 Cepat Laku, Untung Kecil</span></div>
+          <div id="fast-low-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">💎 Untung Besar, Lambat Laku</span></div>
+          <div id="slow-high-list"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Profit Score Semua Produk</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Produk</th><th>HPP</th><th>Harga Jual</th><th>Margin</th><th>Velocity (unit/hr)</th><th>Profit Score</th><th>Tipe</th><th>Rekomendasi</th></tr></thead>
+          <tbody id="profit-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ======== PREDIKSI STOK ======== -->
+    <div class="page" id="page-prediksi">
+      <div class="section-hd">
+        <span class="section-title">Prediksi Stok Habis</span>
+        <span style="font-size:12px;color:var(--gray-500)">prediksi_hari = stok ÷ rata_rata_penjualan_harian</span>
+      </div>
+      <div id="prediksi-content"></div>
+    </div>
+
+    <!-- ======== AUTO RESTOCK ======== -->
+    <div class="page" id="page-restock">
+      <div class="section-hd">
+        <span class="section-title">Auto Restock Recommendation</span>
+        <span style="font-size:12px;color:var(--gray-500)">restock = (lead_time × demand) + safety_stock</span>
+      </div>
+      <div id="restock-content"></div>
+    </div>
+
+    <!-- ======== DYNAMIC PRICING ======== -->
+    <div class="page" id="page-harga">
+      <div class="section-hd">
+        <span class="section-title">Dynamic Pricing Engine</span>
+        <span style="font-size:12px;color:var(--gray-500)">Harga bergerak sesuai stok, demand, dan margin target</span>
+      </div>
+      <div id="harga-content"></div>
+    </div>
+
+    <!-- ======== DEAD STOCK ======== -->
+    <div class="page" id="page-deadstock">
+      <div class="section-hd">
+        <span class="section-title">Dead Stock Detection</span>
+        <span style="font-size:12px;color:var(--gray-500)">dead_score = stok ÷ penjualan_periode — Makin tinggi makin bahaya</span>
+      </div>
+      <div id="dead-content"></div>
+    </div>
+
+    <!-- ======== LOG ======== -->
+    <div class="page" id="page-log">
+      <div class="section-hd"><span class="section-title">Riwayat Aktivitas</span></div>
+      <div class="panel">
+        <div id="log-list"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- ======== MODALS ======== -->
+<!-- Modal Produk -->
+<div class="modal-overlay" id="modal-produk">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Tambah / Edit Produk</span><button class="modal-close" onclick="closeModal('modal-produk')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid two">
+        <div class="form-group"><label class="form-label">SKU / Kode Produk</label><input class="form-input" id="p-sku" placeholder="SKU-001"></div>
+        <div class="form-group"><label class="form-label">Kategori</label>
+          <select class="form-select" id="p-kategori"><option>Parfum</option><option>Skincare</option><option>Makanan</option><option>Minuman</option><option>Aksesoris</option><option>Fashion</option><option>Elektronik</option><option>Lainnya</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Nama Produk</label><input class="form-input" id="p-nama" placeholder="Nama lengkap produk"></div>
+        <div class="form-group"><label class="form-label">HPP / Harga Beli (Rp)</label><input class="form-input" id="p-hpp" type="number" placeholder="0" oninput="hitungMargin()"></div>
+        <div class="form-group"><label class="form-label">Harga Jual (Rp)</label><input class="form-input" id="p-jual" type="number" placeholder="0" oninput="hitungMargin()"></div>
+        <div class="form-group"><label class="form-label">Stok Awal (unit)</label><input class="form-input" id="p-stok" type="number" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Lead Time Supplier (hari)</label><input class="form-input" id="p-lead" type="number" value="3" placeholder="3"></div>
+        <div class="form-group"><label class="form-label">Safety Stock (unit)</label><input class="form-input" id="p-safety" type="number" value="5" placeholder="5"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Preview Margin</label><input class="form-input" id="p-margin-preview" readonly style="background:var(--gray-50);font-weight:700;"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-produk')">Batal</button><button class="btn btn-primary" onclick="saveProduk()">Simpan</button></div>
+  </div>
+</div>
+
+<!-- Modal Penjualan -->
+<div class="modal-overlay" id="modal-jual">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Catat Penjualan</span><button class="modal-close" onclick="closeModal('modal-jual')">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid two">
+        <div class="form-group"><label class="form-label">Tanggal</label><input class="form-input" id="j-tanggal" type="date"></div>
+        <div class="form-group"><label class="form-label">Produk</label><select class="form-select" id="j-produk" onchange="autoHargaJual()"></select></div>
+        <div class="form-group"><label class="form-label">Qty Terjual</label><input class="form-input" id="j-qty" type="number" value="1" min="1" oninput="hitungProfit()"></div>
+        <div class="form-group"><label class="form-label">Harga Jual per unit (Rp)</label><input class="form-input" id="j-harga" type="number" placeholder="0" oninput="hitungProfit()"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Preview Profit</label><input class="form-input" id="j-profit-preview" readonly style="background:var(--teal-50);font-weight:700;color:var(--teal-700);"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-jual')">Batal</button><button class="btn btn-primary" onclick="saveJual()">Simpan</button></div>
+  </div>
+</div>
+
+<script>
+/* ─── DATA STORE ─── */
+let DATA = {
+  produk: [],
+  transaksi: [],
+  log: []
+};
+
+const WARNA = ['#0d7a5f','#60a5fa','#f59e0b','#7c3aed','#ef4444','#10b981','#f97316','#3b82f6'];
+
+/* ─── HELPERS ─── */
+function rp(n){return'Rp '+Number(n||0).toLocaleString('id-ID');}
+function rpK(n){const v=Number(n||0);if(v>=1e9)return'Rp '+(v/1e9).toFixed(1)+'M';if(v>=1e6)return'Rp '+(v/1e6).toFixed(1)+'jt';if(v>=1e3)return'Rp '+(v/1e3).toFixed(0)+'rb';return rp(v);}
+function today(){return new Date().toISOString().slice(0,10);}
+function dateDiff(d1,d2){return Math.round((new Date(d2)-new Date(d1))/(1000*60*60*24));}
+
+function addLog(aksi,detail){
+  DATA.log.unshift({waktu:new Date().toLocaleString('id-ID'),aksi,detail});
+  saveData();
+}
+function saveData(){localStorage.setItem('sipro_data',JSON.stringify(DATA));}
+function loadData(){
+  const s=localStorage.getItem('sipro_data');
+  if(s) DATA=JSON.parse(s);
+  else{seedData();saveData();}
+}
+
+/* ─── SEED ─── */
+function seedData(){
+  DATA.produk=[
+    {id:1,sku:'PRF-001',nama:'Parfum Floral A',kategori:'Parfum',hpp:45000,harga:120000,stok:38,lead:3,safety:5},
+    {id:2,sku:'PRF-002',nama:'Parfum Oud Premium',kategori:'Parfum',hpp:180000,harga:450000,stok:8,lead:5,safety:3},
+    {id:3,sku:'SKN-001',nama:'Serum Vitamin C',kategori:'Skincare',hpp:55000,harga:130000,stok:22,lead:4,safety:5},
+    {id:4,sku:'SKN-002',nama:'Sunscreen SPF50',kategori:'Skincare',hpp:42000,harga:95000,stok:47,lead:3,safety:8},
+    {id:5,sku:'MKN-001',nama:'Snack Choco Crunch',kategori:'Makanan',hpp:8000,harga:15000,stok:5,lead:2,safety:10},
+    {id:6,sku:'MKN-002',nama:'Minuman Boba Sachet',kategori:'Minuman',hpp:5000,harga:11000,stok:80,lead:2,safety:15},
+    {id:7,sku:'ACC-001',nama:'Gelang Manik Premium',kategori:'Aksesoris',hpp:22000,harga:75000,stok:15,lead:7,safety:4},
+    {id:8,sku:'FSN-001',nama:'Dompet Kulit Mini',kategori:'Fashion',hpp:65000,harga:180000,stok:3,lead:10,safety:2},
+    {id:9,sku:'ELK-001',nama:'Kabel USB-C 1m',kategori:'Elektronik',hpp:12000,harga:28000,stok:2,lead:3,safety:8},
+    {id:10,sku:'SKN-003',nama:'Pelembab Malam',kategori:'Skincare',hpp:70000,harga:160000,stok:60,lead:4,safety:6},
+  ];
+  // Generate 60 hari transaksi
+  const today_d = new Date();
+  let txId=1;
+  DATA.produk.forEach(p=>{
+    const days=60;
+    const baseVel=p.kategori==='Makanan'||p.kategori==='Minuman'?4:p.kategori==='Skincare'?2:p.kategori==='Parfum'&&p.hpp<100000?3:0.5;
+    for(let d=days;d>=1;d--){
+      const dd=new Date(today_d);dd.setDate(dd.getDate()-d);
+      const qty=Math.max(0,Math.round(baseVel+Math.random()*2-1));
+      if(qty>0){
+        const hargaVar=p.harga*(0.95+Math.random()*0.1);
+        DATA.transaksi.push({id:txId++,tanggal:dd.toISOString().slice(0,10),produkId:p.id,qty,harga:Math.round(hargaVar),hpp:p.hpp});
+      }
+    }
+  });
+  DATA.log=[{waktu:new Date().toLocaleString('id-ID'),aksi:'Sistem',detail:'Database SIPRO diinisialisasi dengan data demo'}];
+}
+
+/* ─── VELOCITY ─── */
+function getVelocity(produkId,days=30){
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+  const txs=DATA.transaksi.filter(t=>t.produkId===produkId&&new Date(t.tanggal)>=cutoff);
+  const total=txs.reduce((s,t)=>s+t.qty,0);
+  return parseFloat((total/days).toFixed(2));
+}
+function getProdukById(id){return DATA.produk.find(p=>p.id===id);}
+function profitScore(p){
+  const margin=p.harga-p.hpp;
+  const vel=getVelocity(p.id);
+  return parseFloat((margin*vel).toFixed(1));
+}
+function deadScore(p){
+  const sold=DATA.transaksi.filter(t=>t.produkId===p.id&&new Date(t.tanggal)>=new Date(Date.now()-30*86400000)).reduce((s,t)=>s+t.qty,0);
+  if(sold===0) return 999;
+  return parseFloat((p.stok/sold).toFixed(2));
+}
+function prediksiHari(p){
+  const vel=getVelocity(p.id);
+  if(vel===0) return 999;
+  return Math.round(p.stok/vel);
+}
+function restockQty(p){
+  const demand=getVelocity(p.id,30);
+  return Math.ceil(p.lead*demand+p.safety);
+}
+function dynamicPrice(p){
+  const vel=getVelocity(p.id);
+  const maxVel=3;
+  const stockRatio=p.stok/20;
+  const demandFactor=Math.min(vel/maxVel,1.5);
+  let factor=1;
+  if(stockRatio<0.3) factor=1.1+(demandFactor*0.05);
+  else if(stockRatio>2) factor=0.9-(demandFactor*0.03);
+  else factor=1+(demandFactor*0.05-0.025);
+  return Math.round(p.harga*factor/100)*100;
+}
+
+/* ─── NAVIGATION ─── */
+let chartBulanan,chartKategori;
+const pageTitles={dashboard:'Dashboard',produk:'Data Produk',transaksi:'Catat Penjualan',profit:'Smart Profit Engine',prediksi:'Prediksi Stok Habis',restock:'Auto Restock',harga:'Dynamic Pricing',deadstock:'Dead Stock Detection',log:'Riwayat Aktivitas'};
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+name+"'"))n.classList.add('active');});
+  document.getElementById('topbar-title').textContent=pageTitles[name]||name;
+  loadPage(name);
+}
+function loadPage(name){
+  switch(name){
+    case 'dashboard': loadDashboard(); break;
+    case 'produk': loadProduk(); break;
+    case 'transaksi': loadTx(); break;
+    case 'profit': loadProfit(); break;
+    case 'prediksi': loadPrediksi(); break;
+    case 'restock': loadRestock(); break;
+    case 'harga': loadHarga(); break;
+    case 'deadstock': loadDead(); break;
+    case 'log': loadLog(); break;
+  }
+}
+
+/* ─── DASHBOARD ─── */
+function loadDashboard(){
+  const cut30=new Date(Date.now()-30*86400000);
+  const txs30=DATA.transaksi.filter(t=>new Date(t.tanggal)>=cut30);
+  const totalRev=txs30.reduce((s,t)=>s+t.harga*t.qty,0);
+  const totalProfit=txs30.reduce((s,t)=>s+(t.harga-t.hpp)*t.qty,0);
+  const totalUnit=txs30.reduce((s,t)=>s+t.qty,0);
+  const margin=totalRev>0?Math.round(totalProfit/totalRev*100):0;
+
+  const alertDash=document.getElementById('alert-dash');
+  const criticals=DATA.produk.filter(p=>prediksiHari(p)<=3);
+  const deads=DATA.produk.filter(p=>deadScore(p)>5&&p.stok>0);
+  document.getElementById('nb-prediksi').textContent=criticals.length||'0';
+  document.getElementById('nb-dead').textContent=deads.length||'0';
+  let alertHtml='';
+  if(criticals.length) alertHtml+=`<div class="alert alert-red">🚨 ${criticals.length} produk habis dalam ≤3 hari: ${criticals.map(p=>p.nama).join(', ')}</div>`;
+  if(deads.length) alertHtml+=`<div class="alert alert-amber">⚠ ${deads.length} produk berpotensi dead stock — barang tidak bergerak</div>`;
+  alertDash.innerHTML=alertHtml;
+
+  document.getElementById('dash-metrics').innerHTML=[
+    {label:'Omzet 30 Hari',value:rpK(totalRev),delta:'Total penjualan',color:'var(--teal-700)',fill:70,bar:'var(--teal-400)'},
+    {label:'Total Profit',value:rpK(totalProfit),delta:'Margin '+margin+'%',color:'var(--teal-600)',fill:margin,bar:'var(--teal-500)'},
+    {label:'Unit Terjual',value:totalUnit+' unit',delta:'30 hari',color:'var(--blue-700)',fill:60,bar:'var(--blue-400)'},
+    {label:'Dead Stock Alert',value:deads.length+' produk',delta:criticals.length+' kritis stok',color:deads.length>0?'var(--red-500)':'var(--teal-700)',fill:deads.length*10,bar:'var(--red-400)'},
+  ].map(c=>`<div class="metric-card">
+    <div class="mc-label">${c.label}</div>
+    <div class="mc-value" style="color:${c.color}">${c.value}</div>
+    <div class="mc-delta">${c.delta}</div>
+    <div class="mc-bar"><div class="mc-bar-fill" style="width:${Math.min(c.fill,100)}%;background:${c.bar}"></div></div>
+  </div>`).join('');
+
+  // Chart Bulanan
+  const labels=[];const datRev=[];const datProfit=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date(Date.now()-i*86400000);
+    const ds=d.toISOString().slice(0,10);
+    if(i%5===0||i===0) labels.push(d.getDate()+'/'+('0'+(d.getMonth()+1)).slice(-2)); else labels.push('');
+    const dayTxs=DATA.transaksi.filter(t=>t.tanggal===ds);
+    datRev.push(Math.round(dayTxs.reduce((s,t)=>s+t.harga*t.qty,0)/1000));
+    datProfit.push(Math.round(dayTxs.reduce((s,t)=>s+(t.harga-t.hpp)*t.qty,0)/1000));
+  }
+  if(chartBulanan) chartBulanan.destroy();
+  chartBulanan=new Chart(document.getElementById('chartBulanan'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Omzet',data:datRev,borderColor:'#0d7a5f',backgroundColor:'rgba(13,122,95,.08)',tension:.4,fill:true,pointRadius:0,borderWidth:2},
+      {label:'Profit',data:datProfit,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.06)',tension:.4,fill:true,pointRadius:0,borderWidth:2},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:8}}},scales:{y:{ticks:{callback:v=>v+'rb'},grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false}}}}
+  });
+
+  // Chart Kategori
+  const katMap={};
+  txs30.forEach(t=>{const p=getProdukById(t.produkId);if(p){katMap[p.kategori]=(katMap[p.kategori]||0)+t.qty;}});
+  if(chartKategori) chartKategori.destroy();
+  const katKeys=Object.keys(katMap);
+  chartKategori=new Chart(document.getElementById('chartKategori'),{
+    type:'doughnut',
+    data:{labels:katKeys,datasets:[{data:katKeys.map(k=>katMap[k]),backgroundColor:WARNA.slice(0,katKeys.length),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:9}}},cutout:'60%'}
+  });
+
+  // Top Profit
+  const scores=[...DATA.produk].map(p=>({...p,score:profitScore(p)})).sort((a,b)=>b.score-a.score).slice(0,5);
+  const maxScore=scores[0]?.score||1;
+  document.getElementById('top-profit-list').innerHTML=scores.map((p,i)=>`
+    <div class="prog-row">
+      <div class="prog-meta"><span class="prog-name">${p.nama}</span><span class="prog-pct">Score ${p.score}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round(p.score/maxScore*100)}%;background:${WARNA[i]}"></div></div>
+    </div>`).join('');
+
+  // Alerts list
+  const alertItems=[];
+  criticals.slice(0,3).forEach(p=>alertItems.push({icon:'🚨',title:p.nama+' habis ~'+prediksiHari(p)+' hari',desc:'Stok '+p.stok+' unit · Velocity '+getVelocity(p.id)+'/hr',color:'var(--red-50)',border:'var(--red-100)'}));
+  const restocks=DATA.produk.filter(p=>p.stok<=restockQty(p)).slice(0,3);
+  restocks.forEach(p=>alertItems.push({icon:'🔄',title:'Restock '+p.nama,desc:'Order '+restockQty(p)+' unit sekarang',color:'var(--amber-50)',border:'var(--amber-100)'}));
+  document.getElementById('dash-alerts-list').innerHTML=alertItems.length?alertItems.map(a=>`
+    <div style="background:${a.color};border:1px solid ${a.border};border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+      <div style="font-size:12px;font-weight:600;">${a.icon} ${a.title}</div>
+      <div style="font-size:11px;color:var(--gray-600);margin-top:2px;">${a.desc}</div>
+    </div>`).join(''):'<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:12px;">✅ Semua aman — tidak ada alert aktif</div>';
+}
+
+/* ─── PRODUK ─── */
+function loadProduk(){
+  const kats=[...new Set(DATA.produk.map(p=>p.kategori))];
+  document.getElementById('produk-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-val">${DATA.produk.length}</div><div class="stat-lbl">Total Produk</div></div>
+    <div class="stat-cell"><div class="stat-val" style="color:var(--teal-700)">${DATA.produk.filter(p=>p.stok>0).length}</div><div class="stat-lbl">Ada Stok</div></div>
+    <div class="stat-cell"><div class="stat-val" style="color:var(--amber-700)">${DATA.produk.filter(p=>p.stok===0).length}</div><div class="stat-lbl">Kosong</div></div>`;
+  document.getElementById('produk-grid').innerHTML=DATA.produk.map(p=>{
+    const margin=Math.round((p.harga-p.hpp)/p.harga*100);
+    const vel=getVelocity(p.id);
+    const hari=prediksiHari(p);
+    const stockPct=Math.min(p.stok/50*100,100);
+    const stockColor=p.stok<=5?'var(--red-400)':p.stok<=15?'var(--amber-400)':'var(--teal-400)';
+    return`<div class="produk-card">
+      <div class="pc-header">
+        <div><div class="pc-name">${p.nama}</div><div class="pc-sku">${p.sku}</div></div>
+        <span class="badge badge-gray">${p.kategori}</span>
+      </div>
+      <div class="pc-prices">
+        <div class="pc-price"><div class="pc-price-lbl">HPP</div><div class="pc-price-val" style="color:var(--gray-600)">${rpK(p.hpp)}</div></div>
+        <div class="pc-price"><div class="pc-price-lbl">Jual</div><div class="pc-price-val" style="color:var(--teal-700)">${rpK(p.harga)}</div></div>
+      </div>
+      <div style="margin:6px 0;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+          <span style="color:var(--gray-500)">Stok: <b style="color:var(--gray-800)">${p.stok} unit</b></span>
+          <span style="color:var(--gray-500)">Habis ~${hari>=999?'∞':hari} hari</span>
+        </div>
+        <div class="stock-meter"><div class="stock-fill" style="width:${stockPct}%;background:${stockColor}"></div></div>
+      </div>
+      <div class="pc-footer">
+        <span class="badge ${margin>=40?'badge-green':margin>=25?'badge-amber':'badge-red'}">${margin}% margin</span>
+        <span style="font-size:11px;color:var(--gray-500)">${vel} unit/hr</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── TRANSAKSI ─── */
+function loadTx(){
+  const sorted=[...DATA.transaksi].sort((a,b)=>b.tanggal.localeCompare(a.tanggal)).slice(0,50);
+  document.getElementById('tx-table').innerHTML=sorted.map(t=>{
+    const p=getProdukById(t.produkId);
+    const profit=(t.harga-t.hpp)*t.qty;
+    const margin=Math.round(profit/(t.harga*t.qty)*100);
+    return`<tr>
+      <td class="mono" style="color:var(--gray-500)">${t.tanggal}</td>
+      <td style="font-weight:500">${p?.nama||'-'}</td>
+      <td class="mono">${t.qty}</td>
+      <td class="mono">${rp(t.harga)}</td>
+      <td class="mono" style="color:var(--gray-500)">${rp(t.hpp)}</td>
+      <td class="mono" style="color:var(--teal-700);font-weight:600">${rpK(profit)}</td>
+      <td><span class="badge ${margin>=40?'badge-green':margin>=25?'badge-amber':'badge-red'}">${margin}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─── PROFIT ENGINE ─── */
+function loadProfit(){
+  const scored=DATA.produk.map(p=>{
+    const vel=getVelocity(p.id);
+    const margin=p.harga-p.hpp;
+    const marginPct=Math.round(margin/p.harga*100);
+    const score=profitScore(p);
+    const tipo=vel>=2&&marginPct<35?'fast-low':vel<1&&marginPct>=40?'slow-high':marginPct>=40&&vel>=1?'star':'normal';
+    return{...p,vel,margin,marginPct,score,tipo};
+  }).sort((a,b)=>b.score-a.score);
+
+  const fastLow=scored.filter(p=>p.vel>=1.5&&p.marginPct<35);
+  const slowHigh=scored.filter(p=>p.vel<1&&p.marginPct>=40);
+
+  document.getElementById('profit-alerts').innerHTML=`
+    <div class="alert alert-green">💡 <b>Insight:</b> Barang margin kecil tapi cepat mutar bisa lebih menguntungkan. Fokus ke Profit Score, bukan hanya margin.</div>`;
+
+  const makeList=(items,empty)=>items.length?items.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;border:1px solid var(--gray-100);margin-bottom:8px;">
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600">${p.nama}</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${p.marginPct}% margin · ${p.vel} unit/hr</div></div>
+      <div style="text-align:right;"><div style="font-size:18px;font-weight:800;color:var(--teal-600);font-family:var(--mono)">${p.score}</div><div style="font-size:10px;color:var(--gray-500)">score</div></div>
+    </div>`).join(''):`<div style="text-align:center;padding:16px;color:var(--gray-400);font-size:12px;">${empty}</div>`;
+  document.getElementById('fast-low-list').innerHTML=makeList(fastLow,'Tidak ada produk di kategori ini');
+  document.getElementById('slow-high-list').innerHTML=makeList(slowHigh,'Tidak ada produk di kategori ini');
+
+  const rekom={
+    'star':'🌟 Pertahankan & tingkatkan stok',
+    'fast-low':'⚡ Pertimbangkan naikkan harga sedikit',
+    'slow-high':'📣 Tingkatkan promosi / diskon',
+    'normal':'📊 Monitor performa rutin',
+  };
+  document.getElementById('profit-table').innerHTML=scored.map(p=>`<tr>
+    <td style="font-weight:500">${p.nama}</td>
+    <td class="mono">${rpK(p.hpp)}</td>
+    <td class="mono">${rpK(p.harga)}</td>
+    <td><span class="badge ${p.marginPct>=40?'badge-green':p.marginPct>=25?'badge-amber':'badge-red'}">${p.marginPct}%</span></td>
+    <td class="mono" style="color:var(--blue-700)">${p.vel}</td>
+    <td class="mono" style="font-weight:700;color:var(--teal-700)">${p.score}</td>
+    <td><span class="badge ${p.tipo==='star'?'badge-violet':p.tipo==='fast-low'?'badge-blue':p.tipo==='slow-high'?'badge-amber':'badge-gray'}">${p.tipo==='star'?'⭐ Star':p.tipo==='fast-low'?'⚡ Fast':'💎 Premium'}</span></td>
+    <td style="font-size:12px;color:var(--gray-600)">${rekom[p.tipo]||rekom.normal}</td>
+  </tr>`).join('');
+}
+
+/* ─── PREDIKSI ─── */
+function loadPrediksi(){
+  const sorted=[...DATA.produk].map(p=>({...p,hari:prediksiHari(p),vel:getVelocity(p.id)})).sort((a,b)=>a.hari-b.hari);
+  const kritis=sorted.filter(p=>p.hari<=3);
+  const warning=sorted.filter(p=>p.hari>3&&p.hari<=7);
+  const aman=sorted.filter(p=>p.hari>7);
+
+  let html='';
+  if(kritis.length){
+    html+=`<div class="alert alert-red">🚨 <b>${kritis.length} produk</b> akan habis dalam 3 hari ke depan — segera restock!</div>`;
+    html+=`<div style="margin-bottom:16px;">${kritis.map(p=>`
+      <div class="insight-card" style="border:1px solid var(--red-100);">
+        <div class="insight-icon" style="background:var(--red-50);">🔴</div>
+        <div class="insight-body">
+          <div class="insight-title">${p.nama} <span class="badge badge-red">Habis ~${p.hari} hari</span></div>
+          <div class="insight-desc">Stok saat ini: <b>${p.stok} unit</b> · Terjual rata-rata <b>${p.vel} unit/hari</b></div>
+          <div class="insight-action" style="color:var(--red-500)">⚡ Segera hubungi supplier — lead time ${p.lead} hari</div>
+        </div>
+        <div style="text-align:right;"><div style="font-size:28px;font-weight:900;color:var(--red-400);font-family:var(--mono)">${p.hari}</div><div style="font-size:10px;color:var(--gray-500)">hari</div></div>
+      </div>`).join('')}</div>`;
+  }
+  if(warning.length){
+    html+=`<div class="alert alert-amber">⚠ <b>${warning.length} produk</b> habis dalam 4–7 hari — mulai siapkan restock</div>`;
+    html+=`<div style="margin-bottom:16px;">${warning.map(p=>`
+      <div class="insight-card" style="border:1px solid var(--amber-100);">
+        <div class="insight-icon" style="background:var(--amber-50);">🟡</div>
+        <div class="insight-body">
+          <div class="insight-title">${p.nama} <span class="badge badge-amber">Habis ~${p.hari} hari</span></div>
+          <div class="insight-desc">Stok: <b>${p.stok} unit</b> · Velocity: <b>${p.vel} unit/hari</b></div>
+          <div class="insight-action" style="color:var(--amber-700)">📋 Order dalam 2 hari agar tidak kosong</div>
+        </div>
+        <div style="text-align:right;"><div style="font-size:28px;font-weight:900;color:var(--amber-400);font-family:var(--mono)">${p.hari}</div><div style="font-size:10px;color:var(--gray-500)">hari</div></div>
+      </div>`).join('')}</div>`;
+  }
+  if(aman.length){
+    html+=`<div class="alert alert-green">✅ <b>${aman.length} produk</b> stok aman (>7 hari)</div>`;
+    html+=`<div class="panel"><div class="panel-header"><span class="panel-title">Produk Stok Aman</span></div><div class="table-wrap"><table>
+      <thead><tr><th>Produk</th><th>Stok</th><th>Velocity</th><th>Prediksi Habis</th><th>Status</th></tr></thead>
+      <tbody>${aman.map(p=>`<tr>
+        <td style="font-weight:500">${p.nama}</td>
+        <td class="mono">${p.stok}</td>
+        <td class="mono">${p.vel}/hr</td>
+        <td class="mono">${p.hari>=999?'> 90 hari':p.hari+' hari'}</td>
+        <td><span class="badge badge-green">✅ Aman</span></td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  }
+  document.getElementById('prediksi-content').innerHTML=html;
+}
+
+/* ─── AUTO RESTOCK ─── */
+function loadRestock(){
+  const items=DATA.produk.map(p=>{
+    const vel=getVelocity(p.id);
+    const rec=restockQty(p);
+    const hari=prediksiHari(p);
+    const urgent=hari<=p.lead;
+    return{...p,vel,rec,hari,urgent};
+  }).sort((a,b)=>(b.urgent?1:0)-(a.urgent?1:0)||(a.hari-b.hari));
+
+  const urgent=items.filter(p=>p.urgent);
+  let html='';
+  if(urgent.length) html+=`<div class="alert alert-red">🚨 <b>${urgent.length} produk</b> harus SEGERA diorder — stok habis sebelum supplier kirim!</div>`;
+  html+=`<div style="margin-bottom:16px;">`;
+  items.forEach(p=>{
+    const color=p.urgent?'var(--red-50)':p.hari<=7?'var(--amber-50)':'var(--white)';
+    const border=p.urgent?'var(--red-100)':p.hari<=7?'var(--amber-100)':'var(--gray-200)';
+    html+=`<div class="restock-row" style="background:${color};border-color:${border};">
+      <div class="rr-icon">${p.urgent?'🔴':p.hari<=7?'🟡':'🟢'}</div>
+      <div class="rr-info">
+        <div class="rr-name">${p.nama} <span class="badge badge-gray">${p.sku}</span></div>
+        <div class="rr-detail">Stok: ${p.stok} unit · Demand: ${p.vel}/hr · Lead time: ${p.lead} hr · Safety: ${p.safety}</div>
+        <div style="font-size:11px;margin-top:4px;color:var(--gray-600)">Formula: (${p.lead} × ${p.vel}) + ${p.safety} = <b>${p.rec} unit</b></div>
+      </div>
+      <div class="rr-action">
+        <div class="rr-qty">${p.rec} unit</div>
+        <div class="rr-days">Order dalam ${p.urgent?'<span style="color:var(--red-500);font-weight:700">SEKARANG</span>':p.hari-p.lead+' hari'}</div>
+        <span class="badge ${p.urgent?'badge-red':p.hari<=7?'badge-amber':'badge-gray'}">${p.urgent?'🚨 Kritis':p.hari<=7?'⚠ Segera':'Aman'}</span>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('restock-content').innerHTML=html;
+}
+
+/* ─── DYNAMIC PRICING ─── */
+function loadHarga(){
+  const items=DATA.produk.map(p=>{
+    const dp=dynamicPrice(p);
+    const diff=dp-p.harga;
+    const diffPct=Math.round(diff/p.harga*100);
+    const newMargin=Math.round((dp-p.hpp)/dp*100);
+    return{...p,dp,diff,diffPct,newMargin};
+  });
+
+  let html=`<div class="alert alert-blue">🤖 <b>Dynamic Pricing</b> — Harga bergerak otomatis berdasarkan kondisi stok dan demand. Stok tipis + demand tinggi → harga naik. Stok menumpuk → harga turun.</div>`;
+  html+=`<div class="panel"><div class="panel-header"><span class="panel-title">Rekomendasi Harga Dinamis</span></div><div class="table-wrap"><table>
+    <thead><tr><th>Produk</th><th>Stok</th><th>Velocity</th><th>Harga Saat Ini</th><th>Harga Rekomendasi</th><th>Perubahan</th><th>Margin Baru</th><th>Alasan</th></tr></thead>
+    <tbody>${items.map(p=>{
+    const alasan=p.stok<10&&p.vel>1?'Stok tipis + demand tinggi':p.stok>40&&p.vel<0.5?'Stok menumpuk + demand rendah':p.vel>2?'Demand tinggi':p.stok<5?'Stok kritis':'Stabil';
+    return`<tr>
+      <td style="font-weight:500">${p.nama}</td>
+      <td class="mono">${p.stok}</td>
+      <td class="mono">${p.vel}/hr</td>
+      <td class="mono">${rp(p.harga)}</td>
+      <td class="mono" style="font-weight:700;color:${p.dp>p.harga?'var(--teal-700)':p.dp<p.harga?'var(--red-500)':'var(--gray-600)'}">${rp(p.dp)}</td>
+      <td><span class="price-chip ${p.diff>0?'chip-up':p.diff<0?'chip-down':'chip-flat'}">${p.diff>0?'▲':'▼'} ${Math.abs(p.diffPct)}%</span></td>
+      <td><span class="badge ${p.newMargin>=40?'badge-green':p.newMargin>=25?'badge-amber':'badge-red'}">${p.newMargin}%</span></td>
+      <td style="font-size:12px;color:var(--gray-500)">${alasan}</td>
+    </tr>`;}).join('')}
+    </tbody></table></div></div>`;
+  document.getElementById('harga-content').innerHTML=html;
+}
+
+/* ─── DEAD STOCK ─── */
+function loadDead(){
+  const items=DATA.produk.map(p=>({...p,score:deadScore(p),sold30:DATA.transaksi.filter(t=>t.produkId===p.id&&new Date(t.tanggal)>=new Date(Date.now()-30*86400000)).reduce((s,t)=>s+t.qty,0)})).sort((a,b)=>b.score-a.score);
+  const dead=items.filter(p=>p.score>5&&p.stok>0);
+  const slow=items.filter(p=>p.score>2&&p.score<=5&&p.stok>0);
+  const ok=items.filter(p=>p.score<=2||p.stok===0);
+
+  const totalDeadVal=dead.reduce((s,p)=>s+p.stok*p.hpp,0);
+  let html=``;
+  if(dead.length) html+=`<div class="alert alert-red">💀 <b>${dead.length} produk dead stock</b> — total nilai uang mati: <b>${rpK(totalDeadVal)}</b>. Segera ambil tindakan!</div>`;
+
+  if(dead.length){
+    html+=`<div style="margin-bottom:16px;">`;
+    dead.forEach(p=>{
+      const sol=p.score>20?'🔥 Diskon besar / bundling / jual ke reseller':p.score>10?'📢 Promosi flash sale / sosmed':'⚠ Monitor ketat — promosi ringan';
+      html+=`<div class="ds-item">
+        <div class="ds-skull">💀</div>
+        <div class="ds-info">
+          <div class="ds-name">${p.nama} <span class="badge badge-red">Dead Stock</span></div>
+          <div class="ds-detail">Stok: ${p.stok} unit · Terjual 30 hari: ${p.sold30} unit · Nilai: ${rpK(p.stok*p.hpp)}</div>
+          <div style="font-size:11px;margin-top:5px;font-weight:600;color:var(--red-600)">${sol}</div>
+        </div>
+        <div class="ds-score">${p.score>=999?'∞':p.score}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  if(slow.length){
+    html+=`<div class="alert alert-amber">⚠ <b>${slow.length} produk</b> bergerak lambat — perlu perhatian</div>`;
+    html+=`<div class="panel"><div class="panel-header"><span class="panel-title">Produk Lambat</span></div><div class="table-wrap"><table>
+      <thead><tr><th>Produk</th><th>Stok</th><th>Terjual/30hr</th><th>Dead Score</th><th>Rekomendasi</th></tr></thead>
+      <tbody>${slow.map(p=>`<tr>
+        <td style="font-weight:500">${p.nama}</td>
+        <td class="mono">${p.stok}</td>
+        <td class="mono">${p.sold30}</td>
+        <td class="mono" style="font-weight:700;color:var(--amber-600)">${p.score}</td>
+        <td style="font-size:12px;color:var(--amber-700)">📢 Tingkatkan promosi</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  }
+  if(ok.length){
+    html+=`<div class="alert alert-green">✅ <b>${ok.length} produk</b> pergerakan stok sehat</div>`;
+  }
+  document.getElementById('dead-content').innerHTML=html;
+}
+
+/* ─── LOG ─── */
+function loadLog(){
+  document.getElementById('log-list').innerHTML=DATA.log.length?DATA.log.map(l=>`
+    <div class="audit-entry">
+      <div class="audit-time">${l.waktu}</div>
+      <div class="audit-body">
+        <div class="audit-action">${l.aksi}</div>
+        <div class="audit-detail">${l.detail}</div>
+      </div>
+    </div>`).join(''):'<div style="text-align:center;padding:20px;color:var(--gray-400)">Belum ada aktivitas</div>';
+}
+
+/* ─── MODAL ─── */
+function openModal(id){
+  if(id==='modal-jual'){
+    document.getElementById('j-produk').innerHTML=DATA.produk.map(p=>`<option value="${p.id}">${p.nama} (stok: ${p.stok})</option>`).join('');
+    autoHargaJual();
+    document.getElementById('j-tanggal').value=today();
+    document.getElementById('j-qty').value=1;
+    hitungProfit();
+  }
+  if(id==='modal-produk'){
+    ['p-sku','p-nama','p-hpp','p-jual','p-stok'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('p-lead').value=3;document.getElementById('p-safety').value=5;
+    document.getElementById('p-margin-preview').value='';
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+function hitungMargin(){
+  const hpp=parseFloat(document.getElementById('p-hpp').value)||0;
+  const jual=parseFloat(document.getElementById('p-jual').value)||0;
+  if(hpp&&jual){
+    const margin=Math.round((jual-hpp)/jual*100);
+    document.getElementById('p-margin-preview').value=`Margin ${margin}% — Profit/unit: ${rp(jual-hpp)}`;
+  }
+}
+function autoHargaJual(){
+  const pid=parseInt(document.getElementById('j-produk').value);
+  const p=getProdukById(pid);
+  if(p){document.getElementById('j-harga').value=p.harga;hitungProfit();}
+}
+function hitungProfit(){
+  const pid=parseInt(document.getElementById('j-produk').value);
+  const p=getProdukById(pid);
+  const qty=parseInt(document.getElementById('j-qty').value)||0;
+  const harga=parseFloat(document.getElementById('j-harga').value)||0;
+  if(p&&qty&&harga){
+    const profit=(harga-p.hpp)*qty;
+    const margin=Math.round(profit/(harga*qty)*100);
+    document.getElementById('j-profit-preview').value=`Profit: ${rp(profit)} (Margin ${margin}%)`;
+  }
+}
+
+function saveProduk(){
+  const sku=document.getElementById('p-sku').value.trim();
+  const nama=document.getElementById('p-nama').value.trim();
+  const hpp=parseFloat(document.getElementById('p-hpp').value)||0;
+  const harga=parseFloat(document.getElementById('p-jual').value)||0;
+  const stok=parseInt(document.getElementById('p-stok').value)||0;
+  const lead=parseInt(document.getElementById('p-lead').value)||3;
+  const safety=parseInt(document.getElementById('p-safety').value)||5;
+  const kategori=document.getElementById('p-kategori').value;
+  if(!nama||!hpp||!harga) return alert('Nama, HPP, dan harga jual wajib diisi!');
+  const id=Date.now();
+  DATA.produk.push({id,sku:sku||'SKU-'+id,nama,kategori,hpp,harga,stok,lead,safety});
+  addLog('Tambah Produk',`${nama} — HPP ${rp(hpp)} · Jual ${rp(harga)} · Stok ${stok}`);
+  closeModal('modal-produk');loadPage('produk');
+}
+
+function saveJual(){
+  const pid=parseInt(document.getElementById('j-produk').value);
+  const qty=parseInt(document.getElementById('j-qty').value)||0;
+  const harga=parseFloat(document.getElementById('j-harga').value)||0;
+  const tanggal=document.getElementById('j-tanggal').value;
+  if(!tanggal||!qty||!harga) return alert('Tanggal, qty, dan harga wajib!');
+  const p=getProdukById(pid);
+  if(!p) return;
+  if(p.stok<qty) return alert('Stok tidak mencukupi! Stok: '+p.stok);
+  p.stok-=qty;
+  DATA.transaksi.push({id:Date.now(),tanggal,produkId:pid,qty,harga,hpp:p.hpp});
+  addLog('Catat Penjualan',`${p.nama} × ${qty} · Harga ${rp(harga)} · Profit ${rp((harga-p.hpp)*qty)}`);
+  closeModal('modal-jual');loadPage('transaksi');
+}
+
+function setToko(){
+  document.getElementById('toko-nama').textContent=document.getElementById('toko-filter').value;
+}
+
+/* ─── INIT ─── */
+loadData();
+loadDashboard();
+</script>
+</body>
+</html>
